@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FloodSafe Offline</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#eef5f8;color:#102a43}
+.app{max-width:430px;margin:auto;min-height:100vh;background:#f8fbfc;box-shadow:0 0 30px #0001}
+header{padding:22px 20px 12px;background:white;position:sticky;top:0;z-index:5;border-bottom:1px solid #e4edf1}
+.logo{font-size:21px;font-weight:800}.tag{font-size:12px;color:#6b7c87;margin-top:4px}
+.offline{display:inline-block;margin-top:10px;padding:6px 10px;border-radius:20px;background:#e6f7ed;color:#177245;font-size:12px;font-weight:700}
+main{padding:18px 18px 90px}.screen{display:none}.screen.active{display:block}
+h1{font-size:27px;margin:8px 0}.sub{color:#657782;font-size:14px;line-height:1.5}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.card,.request,.stat{background:white;border:1px solid #e2ebef;border-radius:16px;padding:17px;box-shadow:0 5px 18px #16324d08}
+.card{cursor:pointer;min-height:115px}.card b{display:block;margin-top:10px}.emoji{font-size:30px}
+button{border:0;border-radius:12px;padding:13px 16px;font-weight:700;cursor:pointer;background:#1677ff;color:white}
+.back{background:#e9f0f4;color:#234;margin-bottom:10px}.danger{background:#e84545;width:100%;font-size:16px;margin-top:18px}
+.option{background:white;color:#203847;border:2px solid #e2ebef;text-align:left;width:100%;margin:6px 0}.option.selected{border-color:#1677ff;background:#edf5ff}
+.map{height:390px;border-radius:18px;position:relative;overflow:hidden;margin-top:15px;background:
+linear-gradient(90deg,#dbe8dd 1px,transparent 1px),linear-gradient(#dbe8dd 1px,transparent 1px);
+background-size:48px 48px;background-color:#eef2e8;border:1px solid #d7e0d4}
+.road{position:absolute;background:#fff;border:2px solid #d9d9d9;transform:rotate(25deg);width:130%;height:35px;top:170px;left:-50px}
+.pin{position:absolute;font-size:25px;z-index:2}.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;margin-top:10px}.legend span{background:white;padding:7px 9px;border-radius:10px;border:1px solid #e2ebef}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:15px 0}.stat{text-align:center;padding:13px 5px}.num{font-size:22px;font-weight:800}
+.badge{padding:5px 8px;border-radius:9px;font-size:11px;font-weight:800}.critical{background:#ffe5e5;color:#c62828}.high{background:#fff0d8;color:#a55b00}.normal{background:#e5f6ea;color:#23733c}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(430px,100%);display:grid;grid-template-columns:repeat(4,1fr);background:white;border-top:1px solid #dfe8ec;z-index:10}
+.nav button{background:white;color:#60717b;border-radius:0;padding:12px 4px;font-size:11px}.nav button.active{color:#1677ff}
+.notice{background:#eaf4ff;border-left:4px solid #1677ff;padding:12px;border-radius:10px;font-size:13px;margin:14px 0}
+.match{background:#eaf8ef;border:1px solid #bfe4ca;padding:15px;border-radius:14px;margin-top:15px}
+.small{font-size:12px;color:#71818b}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div class="logo">🌧️ FloodSafe Offline</div><div class="tag">Stay Safe. Get Help.</div><span class="offline">● OFFLINE MODE ACTIVE</span></header>
+
+<main>
+<section id="home" class="screen active">
+<h1>Emergency Support</h1><p class="sub">Help is still possible when the internet is unavailable.</p>
+<div class="notice">📴 Demo mode: all data is stored locally on this device.</div>
+<div class="grid">
+<div class="card" onclick="show('sos')"><div class="emoji">🆘</div><b>Emergency SOS</b><span class="small">Request urgent help</span></div>
+<div class="card" onclick="show('map')"><div class="emoji">🗺️</div><b>Offline Safe Map</b><span class="small">Find safe locations</span></div>
+<div class="card" onclick="show('relief')"><div class="emoji">📦</div><b>Relief Matching</b><span class="small">Match supplies to needs</span></div>
+<div class="card" onclick="show('admin')"><div class="emoji">👨‍💼</div><b>Admin Dashboard</b><span class="small">Manage requests</span></div>
+</div>
+</section>
+
+<section id="sos" class="screen">
+<button class="back" onclick="show('home')">← Back</button>
+<h1>🆘 Emergency SOS</h1><p class="sub">What do you need?</p>
+<div id="needs">
+<button class="option" onclick="select(this,'need')">💧 Water</button>
+<button class="option" onclick="select(this,'need')">🍚 Food</button>
+<button class="option" onclick="select(this,'need')">💊 Medicine</button>
+<button class="option" onclick="select(this,'need')">🏠 Shelter</button>
+</div>
+<p class="sub">Who needs help?</p>
+<div id="people">
+<button class="option" onclick="select(this,'person')">👶 Child</button>
+<button class="option" onclick="select(this,'person')">🧓 Elderly</button>
+<button class="option" onclick="select(this,'person')">♿ Disabled</button>
+<button class="option" onclick="select(this,'person')">🤰 Pregnant</button>
+<button class="option" onclick="select(this,'person')">👤 Other</button>
+</div>
+<button class="danger" onclick="sendSOS()">🚨 SEND SOS</button>
+<div id="sosResult"></div>
+</section>
+
+<section id="map" class="screen">
+<button class="back" onclick="show('home')">← Back</button><h1>🗺️ Offline Safe Map</h1>
+<p class="sub">Preloaded emergency locations — no internet required.</p>
+<div class="map">
+<div class="road"></div>
+<div class="pin" style="left:45%;top:48%">📍</div>
+<div class="pin" style="left:17%;top:20%">🟢</div>
+<div class="pin" style="left:70%;top:25%">🏥</div>
+<div class="pin" style="left:65%;top:70%">📦</div>
+<div class="pin" style="left:18%;top:65%">🔴</div>
+</div>
+<div class="legend"><span>🟢 Safe Zone</span><span>🏥 Medical</span><span>📦 Relief</span><span>🔴 Flood</span></div>
+</section>
+
+<section id="relief" class="screen">
+<button class="back" onclick="show('home')">← Back</button><h1>📦 Smart Relief</h1>
+<p class="sub">Demo matching between available supplies and emergency requests.</p>
+<div class="card"><div class="emoji">💧</div><b>Donor Supply</b><p>Clean Water × 20 bottles</p><button onclick="matchRelief()">Find Best Match</button></div>
+<div id="matchResult"></div>
+</section>
+
+<section id="admin" class="screen">
+<button class="back" onclick="show('home')">← Back</button><h1>👨‍💼 Admin Dashboard</h1>
+<p class="sub">Emergency coordination overview.</p>
+<div class="stats"><div class="stat"><div class="num" id="total">24</div><span class="small">Requests</span></div><div class="stat"><div class="num">5</div><span class="small">Critical</span></div><div class="stat"><div class="num">9</div><span class="small">High</span></div></div>
+<div id="requests">
+<div class="request"><span class="badge critical">CRITICAL</span><h3>FS1024 · 💧 Water</h3><p>👶 Child · 📍 Ward 5</p><span class="small">1.2 km from Relief Center</span></div>
+<div class="request" style="margin-top:10px"><span class="badge critical">CRITICAL</span><h3>FS1021 · 💊 Medicine</h3><p>🤰 Pregnant · 📍 Ward 3</p><span class="small">2.1 km</span></div>
+<div class="request" style="margin-top:10px"><span class="badge high">HIGH</span><h3>FS1018 · 🍚 Food</h3><p>👤 Other · 📍 Ward 7</p><span class="small">3.4 km</span></div>
+</div>
+</section>
+</main>
+<div class="nav">
+<button onclick="show('home')" id="n-home">🏠<br>Home</button>
+<button onclick="show('sos')" id="n-sos">🆘<br>SOS</button>
+<button onclick="show('map')" id="n-map">🗺️<br>Map</button>
+<button onclick="show('relief')" id="n-relief">📦<br>Relief</button>
+</div>
+</div>
+<script>
+let selectedNeed='',selectedPerson='';
+function show(id){
+ document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+ document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));
+ let n=document.getElementById('n-'+id); if(n)n.classList.add('active');
+ window.scrollTo(0,0);
+}
+function select(el,type){
+ el.parentElement.querySelectorAll('.option').forEach(x=>x.classList.remove('selected'));
+ el.classList.add('selected');
+ if(type==='need')selectedNeed=el.innerText;
+ else selectedPerson=el.innerText;
+}
+function sendSOS(){
+ if(!selectedNeed||!selectedPerson){alert('Please select both your need and who needs help.');return;}
+ let id='FS'+Math.floor(1000+Math.random()*8999);
+ localStorage.setItem('lastSOS',JSON.stringify({id,need:selectedNeed,person:selectedPerson}));
+ document.getElementById('sosResult').innerHTML=`<div class="match"><b>✅ SOS Request Created</b><p><b>${id}</b> · ${selectedNeed}</p><p>${selectedPerson} · 📍 Ward 5</p><span class="badge critical">🔴 PRIORITY: CRITICAL</span><p class="small">Request saved locally. Admin can see it in the demo dashboard.</p></div>`;
+}
+function matchRelief(){
+ let r=JSON.parse(localStorage.getItem('lastSOS')||'null');
+ let target=r?r.id:'FS1024';
+ document.getElementById('matchResult').innerHTML=`<div class="match"><b>🎯 BEST MATCH FOUND</b><p>💧 Water × 20 → <b>${target}</b></p><p>👶 High-priority request · 📍 Ward 5</p><p>📏 Estimated distance: 1.2 km</p><button onclick="show('admin')">View in Dashboard</button></div>`;
+}
+</script>
+</body>
+</html>
